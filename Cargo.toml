@@ -1,5 +1,5 @@
 [package]
-name = "gh_rs_animated_gitlog"
+name = "gh-yule-gitlog-rs"
 version = "0.1.0"
 edition = "2024"
 description = "Github CLI extension to generate animated graph from logs"
