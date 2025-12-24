@@ -22,4 +22,3 @@ clap = { version = "4.0", features = ["derive"] }
 crossterm = "0.27"
 rand = "0.8"
 animation = { path = "animation" }
-clap = "3.0"
