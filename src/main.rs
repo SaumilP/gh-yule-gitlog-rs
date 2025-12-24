@@ -6,7 +6,7 @@ use clap::Parser;
 use animation;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about = "GitHub CLI extension for animated git log visualization", long_about = None)]
 struct Args {
     /// GitHub username
     #[arg(long, default_value = "SaumilP")]
@@ -88,14 +88,34 @@ fn pad_right(s: &str, n: usize) -> String {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
+    // Try to get GitHub token from gh CLI
+    let token = std::process::Command::new("gh")
+        .args(&["auth", "token"])
+        .output()
+        .ok()
+        .and_then(|output| {
+            if output.status.success() {
+                Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
+            } else {
+                None
+            }
+        });
+
     // Set up the client and the GitHub API URL
     let client = Client::new();
     let url = format!("https://api.github.com/users/{}/events", args.username);
 
-    // Fetch events from GitHub API
-    let response = client
+    // Build the request
+    let mut request = client
         .get(&url)
-        .header("User-Agent", "gh-rs-gitlog")
+        .header("User-Agent", "gh-yule-gitlog-rs");
+
+    if let Some(token) = token {
+        request = request.header("Authorization", format!("token {}", token));
+    }
+
+    // Fetch events from GitHub API
+    let response = request
         .send()
         .await?
         .json::<Vec<GitHubEvent>>()
