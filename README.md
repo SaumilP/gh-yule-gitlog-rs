@@ -1,4 +1,4 @@
-# GitHub Animated Git Log
+# GitHub Animated Activities
 
 ![Yule Log GIF](./docs/yule-gitlog-rs-default.gif)
 
