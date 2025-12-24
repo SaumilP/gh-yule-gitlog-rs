@@ -31,24 +31,25 @@ pub fn run_animation(contribs: bool, msg_text: String, meta_text: String, have_t
     let colors: Vec<Color>;
 
     if contribs {
-        // GitHub contribution graph-style
-        chars = vec![' ', ' ', '⬝', '⯀', '⯀', '◼', '◼', '■', '■', '■'];
+        // GitHub contribution graph-style - ⬝ ▫ ◻ ◼ ■ ⬜ ⬛
+        chars = vec![' ', ' ', ' ', '⬝', '▪', '◼', '◼', '■', '■', '◼', '■'];
         colors = vec![
             Color::Black,
-            Color::Rgb { r: 155, g: 233, b: 168 }, // #9be9a8
-            Color::Rgb { r: 64, g: 196, b: 99 },   // #40c463
+            Color::Rgb { r: 178, g: 241, b: 189 }, // #b2f1bdff
             Color::Rgb { r: 48, g: 161, b: 78 },   // #30a14e
-            Color::Rgb { r: 33, g: 110, b: 57 },   // #216e39
+            Color::Rgb { r: 11, g: 110, b: 42 },   // #0b6e2aff
+            Color::Rgb { r: 15, g: 73, b: 32 },    // #0f4920ff
+            Color::Rgb { r: 8, g: 143, b: 125 },    // #088f7dff
         ];
     } else {
         // Fire style with 5 heat levels
         chars = vec![' ', ' ', ' ', ':', '^', '*', 'x', 's', 'S', '#', '$'];
         colors = vec![
             Color::Black,                           // No heat
-            Color::Rgb { r: 135, g: 206, b: 235 }, // Sky blue (low heat)
+            Color::Rgb { r: 135, g: 206, b: 235 },  // Sky blue (low heat)
             Color::Blue,                            // Blue
             Color::Yellow,                          // Yellow
-            Color::Rgb { r: 255, g: 165, b: 0 },   // Orange
+            Color::Rgb { r: 255, g: 165, b: 0 },    // Orange
             Color::Red,                             // Red (hottest)
         ];
     }
