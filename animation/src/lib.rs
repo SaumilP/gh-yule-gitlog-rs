@@ -11,11 +11,11 @@ use std::io::stdout;
 use std::time::Duration as StdDuration;
 
 // Animation configuration constants
-const BASE_HEAT: i32 = 60;
+const BASE_HEAT: i32 = 40;
 const HEAT_SCALING_FACTOR: i32 = 3;
-const MAX_HEAT_SCALING: i32 = 85;
+const MAX_HEAT_SCALING: i32 = 70;
 const BASE_INJECTIONS_DIV: usize = 4;
-const EVENT_INJECTIONS_DIV: usize = 5;
+const EVENT_INJECTIONS_DIV: usize = 8;
 const COOLING_EVENT_FACTOR: i32 = 30;
 
 pub fn run_animation(contribs: bool, msg_text: String, meta_text: String, have_ticker: bool, speed: u8, num_events: usize, smoke_factor: u8) -> Result<(), Box<dyn std::error::Error>> {
@@ -32,7 +32,7 @@ pub fn run_animation(contribs: bool, msg_text: String, meta_text: String, have_t
 
     if contribs {
         // GitHub contribution graph-style
-        chars = vec![' ', '⬝', '⬝', '⯀', '⯀', '◼', '◼', '■', '■', '■'];
+        chars = vec![' ', ' ', '⬝', '⯀', '⯀', '◼', '◼', '■', '■', '■'];
         colors = vec![
             Color::Black,
             Color::Rgb { r: 155, g: 233, b: 168 }, // #9be9a8
@@ -42,7 +42,7 @@ pub fn run_animation(contribs: bool, msg_text: String, meta_text: String, have_t
         ];
     } else {
         // Fire style with 5 heat levels
-        chars = vec![' ', ' ', ':', '^', '*', 'x', 's', 'S', '#', '$'];
+        chars = vec![' ', ' ', ' ', ':', '^', '*', 'x', 's', 'S', '#', '$'];
         colors = vec![
             Color::Black,                           // No heat
             Color::Rgb { r: 135, g: 206, b: 235 }, // Sky blue (low heat)
