@@ -84,6 +84,37 @@ fn pad_right(s: &str, n: usize) -> String {
     }
 }
 
+fn filter_events_by_days(events: Vec<GitHubEvent>, past_days: u32) -> Vec<GitHubEvent> {
+    let past_date = Utc::now() - Duration::days(past_days as i64);
+    events
+        .into_iter()
+        .filter(|event| {
+            let event_date = chrono::DateTime::parse_from_rfc3339(&event.created_at)
+                .unwrap()
+                .with_timezone(&Utc);
+            event_date > past_date
+        })
+        .collect()
+}
+
+fn filter_contrib_events(events: &mut Vec<GitHubEvent>) {
+    let contrib_types = vec![
+        "PushEvent",
+        "PullRequestEvent",
+        "IssuesEvent",
+        "IssueCommentEvent",
+        "PullRequestReviewEvent",
+        "PullRequestReviewCommentEvent",
+        "CreateEvent",
+        "ForkEvent",
+        "WatchEvent",
+    ];
+    events.retain(|event| contrib_types.contains(&event.type_.as_str()));
+}
+
+#[cfg(test)]
+mod main_tests;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
@@ -121,34 +152,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .json::<Vec<GitHubEvent>>()
         .await?;
 
-    // Get the date from past_days ago
-    let past_date = Utc::now() - Duration::days(args.past_days as i64);
-
     // Filter events that happened in the past days
-    let mut filtered_events: Vec<_> = response
-        .into_iter()
-        .filter(|event| {
-            let event_date = chrono::DateTime::parse_from_rfc3339(&event.created_at)
-                .unwrap()
-                .with_timezone(&Utc);
-            event_date > past_date
-        })
-        .collect();
+    let mut filtered_events = filter_events_by_days(response, args.past_days);
 
     // If --contribs is specified, filter for contribution events
     if args.contribs {
-        let contrib_types = vec![
-            "PushEvent",
-            "PullRequestEvent",
-            "IssuesEvent",
-            "IssueCommentEvent",
-            "PullRequestReviewEvent",
-            "PullRequestReviewCommentEvent",
-            "CreateEvent",
-            "ForkEvent",
-            "WatchEvent",
-        ];
-        filtered_events.retain(|event| contrib_types.contains(&event.type_.as_str()));
+        filter_contrib_events(&mut filtered_events);
     }
 
     // Parse events to ticker
