@@ -18,6 +18,42 @@ const BASE_INJECTIONS_DIV: usize = 4;
 const EVENT_INJECTIONS_DIV: usize = 8;
 const COOLING_EVENT_FACTOR: i32 = 30;
 
+fn heat_scaling(num_events: usize) -> i32 {
+    (num_events as i32 * HEAT_SCALING_FACTOR).min(MAX_HEAT_SCALING)
+}
+
+fn heat_base(num_events: usize) -> i32 {
+    BASE_HEAT + heat_scaling(num_events)
+}
+
+fn num_injections(width: usize, num_events: usize) -> usize {
+    let base_injections = width / BASE_INJECTIONS_DIV;
+    let event_injections = num_events / EVENT_INJECTIONS_DIV;
+    base_injections + event_injections
+}
+
+fn cooling_value(speed: u8, num_events: usize) -> i32 {
+    (speed as i32 - (num_events as i32 / COOLING_EVENT_FACTOR)).max(1)
+}
+
+fn color_idx(v: i32) -> usize {
+    match v {
+        v if v > 20 => 5, // Red (hottest)
+        v if v > 15 => 4, // Orange
+        v if v > 10 => 3, // Yellow
+        v if v > 5 => 2,  // Blue
+        v if v > 0 => 1,  // Sky blue
+        _ => 0,            // Black (no heat)
+    }
+}
+
+fn char_idx(v: i32, chars_len: usize) -> usize {
+    ((v as usize * chars_len) / 25).min(chars_len - 1)
+}
+
+#[cfg(test)]
+mod lib_tests;
+
 pub fn run_animation(contribs: bool, msg_text: String, meta_text: String, have_ticker: bool, speed: u8, num_events: usize, smoke_factor: u8) -> Result<(), Box<dyn std::error::Error>> {
     let mut stdout = stdout();
     execute!(stdout, EnterAlternateScreen, Hide)?;
@@ -72,12 +108,9 @@ pub fn run_animation(contribs: bool, msg_text: String, meta_text: String, have_t
 
         // Inject heat
         let mut rng = rand::thread_rng();
-        let heat_scaling = (num_events as i32 * HEAT_SCALING_FACTOR).min(MAX_HEAT_SCALING);
-        let heat_base = BASE_HEAT + heat_scaling;
-        let base_injections = (width as usize) / BASE_INJECTIONS_DIV;
-        let event_injections = num_events / EVENT_INJECTIONS_DIV;
-        let num_injections = base_injections + event_injections;
-        for _ in 0..num_injections {
+        let heat_base = heat_base(num_events);
+        let injections = num_injections(width as usize, num_events);
+        for _ in 0..injections {
             let idx = rng.gen_range(0..width) + width * (height - 1);
             if (idx as usize) < buffer.len() {
                 buffer[idx as usize] = heat_base;
@@ -95,7 +128,7 @@ pub fn run_animation(contribs: bool, msg_text: String, meta_text: String, have_t
                 let left = if x > 0 { buffer[x - 1 + y * width as usize] } else { 0 };
                 let right = if x < width as usize - 1 { buffer[x + 1 + y * width as usize] } else { 0 };
                 let avg = (left + right + below + below_right) / 4;
-                let cooling = (speed as i32 - (num_events as i32 / COOLING_EVENT_FACTOR)).max(1);
+                let cooling = cooling_value(speed, num_events);
                 new_buffer[idx] = (avg - cooling).max(smoke_level);
             }
         }
@@ -126,16 +159,8 @@ pub fn run_animation(contribs: bool, msg_text: String, meta_text: String, have_t
                 continue;
             }
 
-            let color_idx = match v {
-                v if v > 20 => 5, // Red (hottest)
-                v if v > 15 => 4, // Orange
-                v if v > 10 => 3, // Yellow
-                v if v > 5 => 2,  // Blue
-                v if v > 0 => 1,  // Sky blue
-                _ => 0,            // Black (no heat)
-            };
-
-            let ch_idx = ((v as usize * chars.len()) / 25).min(chars.len() - 1);
+            let color_idx = color_idx(v);
+            let ch_idx = char_idx(v, chars.len());
 
             execute!(
                 stdout,
